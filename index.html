@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="description" content="kalkulator JS">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Kalkulator</title>
+    </head>
+    <body>
+
+
+      <label>Bilans organizatora:</label> <input type=text id="ownerBalance"><br>
+      <label>Bilans gracza: </label> <input type=text id="playerBalance"><br>
+      <label>Stawka: </label><input type=text id="bet"><br>
+      <label>Mnożnik: </label><input type=text id="multiplier"><br>
+
+      <button type="button" id="win">WYGRANA</button>
+      <button type="button" id="loose">PRZEGRANA</button>
+      <button type="butotn" id="reset">RESET</button>
+
+
+      <script>
+
+        function createIntegerGetter(errorMessage) {
+          return function () {
+            var value = parseFloat(this.input.value);
+
+            if (isNaN(value)) {
+              throw errorMessage;
+            }
+
+            return value;
+          }
+        }
+
+        function Account(inputId, integerGetter) {
+          this.input = document.getElementById(inputId);
+
+          this.value = integerGetter.bind(this);
+        }
+
+        Account.prototype.incrementBy = function (amount) {
+          var currentValue = this.value();
+          this.input.value = currentValue + amount;
+        }
+
+        Account.prototype.decrementBy = function (amount) {
+          var currentValue = this.value();
+          var newValue = currentValue - amount;
+
+          if (newValue < 0) {
+            newValue = 0;
+          }
+
+          this.input.value = newValue;
+
+        }
+
+
+        function Input(inputId, integerGetter) {
+            this.input = document.getElementById(inputId);
+            this.value = integerGetter.bind(this);
+        }
+
+
+
+        var ownerAccount = new Account('ownerBalance', createIntegerGetter("Błędna wartość w polu OWNER BALANCE"));
+        var playerAccount = new Account('playerBalance', createIntegerGetter("Błędna wartość w polu PLAYER BALANCE"));
+        var multiplier = new Input('multiplier', createIntegerGetter("Błędna wartosć w polu MNOŻNIK"));
+        var bet = new Input('bet', createIntegerGetter("Błędna wartość w polu STAWKA"));
+
+        var defaultMultiplier = 1.8;
+
+
+
+        document.getElementById('win').onclick = function () {
+          var prize = bet.value() * multiplier.value();
+          var fractionalPart = prize - Math.floor(prize);
+
+          if (fractionalPart >= 0.5) {
+            prize = Math.ceil(prize);
+          } else {
+            prize = Math.floor(prize);
+          }
+
+          playerAccount.decrementBy(bet.value());
+
+          playerAccount.incrementBy(prize);
+          ownerAccount.decrementBy(prize);
+        };
+
+        document.getElementById('loose').onclick = function () {
+          ownerAccount.incrementBy(bet.value());
+          playerAccount.decrementBy(bet.value());
+        };
+
+        document.getElementById('reset').onclick = function () {
+          playerAccount.input.value = 0;
+          multiplier.input.value = defaultMultiplier;
+          bet.input.value = 0;
+        };
+      </script>
+
+
+    </body>
+</html>
