@@ -4,108 +4,211 @@
         <meta charset="utf-8">
         <meta name="description" content="kalkulator JS">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="bootstrap.min.css">
         <title>Kalkulator</title>
+        <style type="text/css">
+            .full-button button {
+                width: 100%; 
+            }
+
+            .full-button  {
+                margin-bottom: 10px;
+            }
+
+            .error {
+                border-color: red;
+            }
+        </style>
     </head>
     <body>
 
 
-      <label>Bilans organizatora:</label> <input type=text id="ownerBalance"><br>
-      <label>Bilans gracza: </label> <input type=text id="playerBalance"><br>
-      <label>Stawka: </label><input type=text id="bet"><br>
-      <label>Mnożnik: </label><input type=text id="multiplier"><br>
 
-      <button type="button" id="win">WYGRANA</button>
-      <button type="button" id="loose">PRZEGRANA</button>
-      <button type="butotn" id="reset">RESET</button>
+        <div class="container">
+
+            <h1>Casino Calculator</h1>
+
+            <div class="form-group row">
+                <label class="col-3 col-form-label">Bilans organizatora:</label> 
+                <div class="col-9">
+                    <input class="form-control" type=text id="ownerBalance"><br>
+                    <span id="ownerBalanceError" class="bg-danger" style="display: none">
+                        W tym polu musi znajdować się wartośc liczbowa
+                    </span>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-3 col-form-label">Bilans gracza:</label> 
+                <div class="col-9">
+                    <input class="form-control" type=text id="playerBalance" >
+                    <span id="playerBalanceError" class="bg-danger" style="display: none">
+                        W tym polu musi znajdować się wartośc liczbowa
+                    </span>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-3 col-form-label">Stawka </label> 
+                <div class="col-9">
+                    <input class="form-control" type=text id="bet">
+                    <span id="betError" class="bg-danger" style="display: none">
+                        W tym polu musi znajdować się wartośc liczbowa
+                    </span>
+                </div>
+
+            </div>
+            <div class="form-group row">
+                <label class="col-3 col-form-label">Mnożnik :</label> 
+                <div class="col-9">
+                    <input class="form-control" type=text id="multiplier">
+                    <span id="multiplierError" class="bg-danger" style="display: none">
+                        W tym polu musi znajdować się wartośc liczbowa
+                    </span>
+                </div>
+
+            </div>
+
+            <div class="row full-button "> 
+                <div class="col-6">
+                    <button type="button" class="btn btn-success" id="win">WYGRANA</button>
+                </div>
+                <div class="col-6">
+                    <button type="button" class="btn btn-danger" id="loose">PRZEGRANA</button>
+                </div>
 
 
-      <script>
+            </div>
 
-        function createIntegerGetter(errorMessage) {
-          return function () {
-            var value = parseFloat(this.input.value);
+            <div class="row full-button">
+                <div class="col-12"> 
+                    <button type="button" class="btn btn-dark" id="reset">RESET</button>
+                </div>
+            </div>
 
-            if (isNaN(value)) {
-              throw errorMessage;
+
+
+
+        </div>
+
+        <script>
+
+            function createFloatGetter(errorMessage) {
+                return function () {
+                    var value = parseFloat(this.input.value);
+                    return value;
+                };
             }
 
-            return value;
-          }
-        }
+            function Account(inputId, integerGetter, enableNegative) {
+                this.input = document.getElementById(inputId);
+                this.enableNegative = enableNegative;
+                this.value = integerGetter.bind(this);
+            }
 
-        function Account(inputId, integerGetter, enableNegative) {
-          this.input = document.getElementById(inputId);
+            Account.prototype.incrementBy = function (amount) {
+                var currentValue = this.value();
+                this.input.value = currentValue + amount;
+            };
 
-          this.enableNegative = enableNegative;
+            Account.prototype.decrementBy = function (amount) {
+                var currentValue = this.value();
+                var newValue = currentValue - amount;
 
-          this.value = integerGetter.bind(this);
-        }
+                if (newValue < 0 && (this.enableNegative === false)) {
+                    newValue = 0;
+                }
 
-        Account.prototype.incrementBy = function (amount) {
-          var currentValue = this.value();
-          this.input.value = currentValue + amount;
-        }
-
-        Account.prototype.decrementBy = function (amount) {
-          var currentValue = this.value();
-          var newValue = currentValue - amount;
-
-          if (newValue < 0 && (this.enableNegative === false)) {
-            newValue = 0;
-          }
-
-          this.input.value = newValue;
-
-        }
+                this.input.value = newValue;
+            };
 
 
-        function Input(inputId, integerGetter) {
-            this.input = document.getElementById(inputId);
-            this.value = integerGetter.bind(this);
-        }
+            function Input(inputId, integerGetter) {
+                this.input = document.getElementById(inputId);
+                this.value = integerGetter.bind(this);
+            }
+
+            var ownerAccount = new Account('ownerBalance', createFloatGetter("Błędna wartość w polu OWNER BALANCE"), true);
+            var playerAccount = new Account('playerBalance', createFloatGetter("Błędna wartość w polu PLAYER BALANCE"), false);
+            var multiplier = new Input('multiplier', createFloatGetter("Błędna wartosć w polu MNOŻNIK"));
+            var bet = new Input('bet', createFloatGetter("Błędna wartość w polu STAWKA"));
+
+            var errors = false;
+
+            function validate() {
+                var value = parseFloat(this.value);
+                var classes = this.className.split(" ");
+                var errorText = document.getElementById(this.getAttribute('id')+"Error");
+                var style = "";
+                if (isNaN(value)) {
+                    classes.push('error');
+                    style = "block";
+                    document.getElementById('loose').disabled = true;
+                    document.getElementById('win').disabled = true;
+                    
+                } else {
+                    for (key in classes) {
+                        if (classes[key] === 'error') {
+                            classes[key] = '';
+                            break;
+                        }
+                    }
+                    document.getElementById('loose').disabled = false;
+                    document.getElementById('win').disabled = false;
+                    style = "none";
+                }
+
+                errorText.style.display = style;
+                this.className = classes.join(" ");
+
+            }
+
+            document.getElementById('ownerBalance').onchange = validate;
+            document.getElementById('playerBalance').onchange = validate;
+            document.getElementById('multiplier').onchange = validate;
+            document.getElementById('bet').onchange = validate;
+
+
+            function reset() {
+                
+                playerAccount.input.value = 0;
+                playerAccount.input.onchange();
+                multiplier.input.value = defaultMultiplier;
+                playerAccount.input.onchange();
+                bet.input.value = 0;
+                bet.input.onchange();
+                ownerAccount.input.value = 0;
+                ownerAccount.input.onchange();
+                
+            }
+
+            var defaultMultiplier = 1.8;
+
+            document.getElementById('win').onclick = function () {
+
+                var prize = bet.value() * multiplier.value();
+                var fractionalPart = prize - Math.floor(prize);
+
+                if (fractionalPart >= 0.5) {
+                    prize = Math.ceil(prize);
+                } else {
+                    prize = Math.floor(prize);
+                }
+
+                playerAccount.decrementBy(bet.value());
+
+                playerAccount.incrementBy(prize);
+                ownerAccount.decrementBy(bet.value() * (multiplier.value() - 1));
+            };
+
+            document.getElementById('loose').onclick = function () {
+                ownerAccount.incrementBy(bet.value());
+                playerAccount.decrementBy(bet.value());
+            };
 
 
 
-        reset();
-
-        var ownerAccount = new Account('ownerBalance', createIntegerGetter("Błędna wartość w polu OWNER BALANCE"), true);
-        var playerAccount = new Account('playerBalance', createIntegerGetter("Błędna wartość w polu PLAYER BALANCE"), false);
-        var multiplier = new Input('multiplier', createIntegerGetter("Błędna wartosć w polu MNOŻNIK"));
-        var bet = new Input('bet', createIntegerGetter("Błędna wartość w polu STAWKA"));
-
-        function reset() {
-          playerAccount.input.value = 0;
-          multiplier.input.value = defaultMultiplier;
-          bet.input.value = 0;
-        }
-
-        var defaultMultiplier = 1.8;
-
-        document.getElementById('win').onclick = function () {
-          var prize = bet.value() * multiplier.value();
-          var fractionalPart = prize - Math.floor(prize);
-
-          if (fractionalPart >= 0.5) {
-            prize = Math.ceil(prize);
-          } else {
-            prize = Math.floor(prize);
-          }
-
-          playerAccount.decrementBy(bet.value());
-
-          playerAccount.incrementBy(prize);
-          ownerAccount.decrementBy(bet.value() * (multiplier.value() - 1));
-        };
-
-        document.getElementById('loose').onclick = function () {
-          ownerAccount.incrementBy(bet.value());
-          playerAccount.decrementBy(bet.value());
-        };
-
-
-
-        document.getElementById('reset').onclick = reset;
-      </script>
+            document.getElementById('reset').onclick = reset;
+            reset();
+        </script>
 
 
     </body>
