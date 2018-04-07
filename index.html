@@ -66,14 +66,20 @@
 
 
 
+        reset();
+
         var ownerAccount = new Account('ownerBalance', createIntegerGetter("Błędna wartość w polu OWNER BALANCE"), true);
         var playerAccount = new Account('playerBalance', createIntegerGetter("Błędna wartość w polu PLAYER BALANCE"), false);
         var multiplier = new Input('multiplier', createIntegerGetter("Błędna wartosć w polu MNOŻNIK"));
         var bet = new Input('bet', createIntegerGetter("Błędna wartość w polu STAWKA"));
 
+        function reset() {
+          playerAccount.input.value = 0;
+          multiplier.input.value = defaultMultiplier;
+          bet.input.value = 0;
+        }
+
         var defaultMultiplier = 1.8;
-
-
 
         document.getElementById('win').onclick = function () {
           var prize = bet.value() * multiplier.value();
@@ -88,7 +94,7 @@
           playerAccount.decrementBy(bet.value());
 
           playerAccount.incrementBy(prize);
-          ownerAccount.decrementBy(prize);
+          ownerAccount.decrementBy(bet.value() * (multiplier.value() - 1));
         };
 
         document.getElementById('loose').onclick = function () {
@@ -96,11 +102,9 @@
           playerAccount.decrementBy(bet.value());
         };
 
-        document.getElementById('reset').onclick = function () {
-          playerAccount.input.value = 0;
-          multiplier.input.value = defaultMultiplier;
-          bet.input.value = 0;
-        };
+
+
+        document.getElementById('reset').onclick = reset;
       </script>
 
 
