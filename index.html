@@ -33,8 +33,10 @@
           }
         }
 
-        function Account(inputId, integerGetter) {
+        function Account(inputId, integerGetter, enableNegative) {
           this.input = document.getElementById(inputId);
+
+          this.enableNegative = enableNegative;
 
           this.value = integerGetter.bind(this);
         }
@@ -48,7 +50,7 @@
           var currentValue = this.value();
           var newValue = currentValue - amount;
 
-          if (newValue < 0) {
+          if (newValue < 0 && (this.enableNegative === false)) {
             newValue = 0;
           }
 
@@ -64,8 +66,8 @@
 
 
 
-        var ownerAccount = new Account('ownerBalance', createIntegerGetter("Błędna wartość w polu OWNER BALANCE"));
-        var playerAccount = new Account('playerBalance', createIntegerGetter("Błędna wartość w polu PLAYER BALANCE"));
+        var ownerAccount = new Account('ownerBalance', createIntegerGetter("Błędna wartość w polu OWNER BALANCE"), true);
+        var playerAccount = new Account('playerBalance', createIntegerGetter("Błędna wartość w polu PLAYER BALANCE"), false);
         var multiplier = new Input('multiplier', createIntegerGetter("Błędna wartosć w polu MNOŻNIK"));
         var bet = new Input('bet', createIntegerGetter("Błędna wartość w polu STAWKA"));
 
